@@ -2,6 +2,7 @@ package control
 
 import (
 	"FuckEventvwr/velocidex/evtx"
+	"os"
 	"sync"
 )
 
@@ -13,12 +14,20 @@ var recordsLock sync.Mutex
 // 所有文件
 var files []string
 
-// 所有chunk
+// 所有 chunk
 var chunks []*evtx.Chunk
 
 // 所有事件
 var records []*evtx.EventRecord
 
+// 添加文件
+func addFile(file string) {
+	filesLock.Lock()
+	defer filesLock.Unlock()
+	files = append(files, file)
+}
+
+// 取出文件
 func takeFile() string {
 	filesLock.Lock()
 	defer filesLock.Unlock()
@@ -31,6 +40,16 @@ func takeFile() string {
 	return file
 }
 
+// 添加 chunk
+func addChunk(chunk []*evtx.Chunk) {
+	chunksLock.Lock()
+	defer chunksLock.Unlock()
+	for _, c := range chunk {
+		chunks = append(chunks, c)
+	}
+}
+
+// 取出 chunk
 func takeChunk() *evtx.Chunk {
 	chunksLock.Lock()
 	defer chunksLock.Unlock()
@@ -43,6 +62,16 @@ func takeChunk() *evtx.Chunk {
 	return chunk
 }
 
+// 添加记录
+func addRecord(record []*evtx.EventRecord) {
+	recordsLock.Lock()
+	defer recordsLock.Unlock()
+	for _, r := range record {
+		records = append(records, r)
+	}
+}
+
+// 取出记录
 func takeRecord() *evtx.EventRecord {
 	recordsLock.Lock()
 	defer recordsLock.Unlock()
@@ -55,15 +84,50 @@ func takeRecord() *evtx.EventRecord {
 	return record
 }
 
-func fileWork() {
+// func fileWork(fc chan string, wg *sync.WaitGroup) {
+func fileWork(wg *sync.WaitGroup) {
 
 }
 
-func chunkWork() {
-
+// 读取文件拿chunk
+func chunkWork(wg *sync.WaitGroup) {
+	for {
+		f := takeFile()
+		if f == "" {
+			wg.Done()
+			return
+		}
+		file, err := os.Open(f)
+		if err != nil {
+			addError("[ERROR] 打开" + f + "文件失败:" + err.Error())
+			continue
+		}
+		// 获取文件中的所有块（Chunk）
+		chunks, err := evtx.GetChunks(file)
+		file.Close()
+		if err != nil {
+			addError("[ERROR] 获取 " + f + " 文件 Chunk 出现错误, 错误信息: " + err.Error())
+			continue
+		}
+		addChunk(chunks)
+	}
 }
 
-func recordWork() {
+// 读chunk拿记录
+func recordWork(wg *sync.WaitGroup) {
+	for {
+		c := takeChunk()
+		if c == nil {
+			wg.Done()
+			return
+		}
+		records, err := c.Parse(0)
+		if err != nil {
+			addError("[ERROR] 解析 Chunk 出现错误, 错误信息: " + err.Error())
+			continue
+		}
+		addRecord(records)
+	}
 
 }
 
