@@ -1,6 +1,7 @@
 package control
 
 import (
+	"FuckEventvwr/output"
 	"FuckEventvwr/velocidex/evtx"
 	"os"
 	"sync"
@@ -72,7 +73,7 @@ func addRecord(record []*evtx.EventRecord) {
 }
 
 // 取出记录
-func takeRecord() *evtx.EventRecord {
+func TakeRecord() *evtx.EventRecord {
 	recordsLock.Lock()
 	defer recordsLock.Unlock()
 
@@ -131,6 +132,17 @@ func recordWork(wg *sync.WaitGroup) {
 
 }
 
-func writeWork() {
-
+func writeWork(wg *sync.WaitGroup) {
+	for {
+		r := TakeRecord()
+		if r == nil {
+			wg.Done()
+			return
+		}
+		err := output.Output.Write(r)
+		if err != nil {
+			addError("[ERROR] 写入数据出现错误, 错误信息: " + err.Error())
+			continue
+		}
+	}
 }
