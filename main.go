@@ -1,6 +1,7 @@
 package main
 
 import (
+	"FuckEventvwr/config"
 	"FuckEventvwr/control"
 	"flag"
 	"fmt"
@@ -15,17 +16,19 @@ func main() {
 
 	flag.Parse()
 
+	Cfg := config.Cfg
+
 	switch *t {
 	case "p":
-		control.Cfg.Path = *p
+		Cfg.Path = *p
 	case "s":
-		control.Cfg.Path = "C:\\Windows\\System32\\winevt\\Logs"
+		Cfg.Path = "C:\\Windows\\System32\\winevt\\Logs"
 	default:
 		fmt.Println("指定类型错误,请查看帮助")
 		return
 	}
-	control.Cfg.Output = *o
-	control.Cfg.Cover = *c
+	Cfg.Output = *o
+	Cfg.Cover = *c
 
 	control.Run()
 }

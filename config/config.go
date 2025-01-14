@@ -1,4 +1,4 @@
-package control
+package config
 
 type config struct {
 	// 路径
