@@ -1,8 +1,11 @@
 package control
 
-var errorChan = make(chan string, 100)
+import (
+	"fmt"
+)
 
 // 工作过程时的错误处理
 func addError(e string) {
-	errorChan <- e
+	fmt.Println(e)
+	// output.Output.WriteError(e)
 }

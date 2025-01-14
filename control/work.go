@@ -1,7 +1,6 @@
 package control
 
 import (
-	"FuckEventvwr/output"
 	"FuckEventvwr/velocidex/evtx"
 	"fmt"
 	"os"
@@ -97,15 +96,7 @@ func writeWork(wg *sync.WaitGroup) {
 			wg.Done()
 			return
 		}
-		output.Output.WriteRecord(record)
-	}
-}
-
-// 错误处理线程
-func errorWork(wg *sync.WaitGroup) {
-	for {
-		e := <-errorChan
-		fmt.Println(e)
-		output.Output.WriteError(e)
+		// output.Output.WriteRecord(record)
+		fmt.Println(record.Event)
 	}
 }
