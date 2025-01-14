@@ -3,30 +3,20 @@ package control
 import (
 	"FuckEventvwr/output"
 	"FuckEventvwr/velocidex/evtx"
+	"fmt"
 	"os"
 	"sync"
 )
 
 // 锁
 var filesLock sync.Mutex
-var chunksLock sync.Mutex
 var recordsLock sync.Mutex
 
 // 所有文件
 var files []string
 
-// 所有 chunk
-var chunks []*evtx.Chunk
-
 // 所有事件
 var records []*evtx.EventRecord
-
-// 添加文件
-func addFile(file string) {
-	filesLock.Lock()
-	defer filesLock.Unlock()
-	files = append(files, file)
-}
 
 // 取出文件
 func takeFile() string {
@@ -39,28 +29,6 @@ func takeFile() string {
 	file := files[0]
 	files = files[1:]
 	return file
-}
-
-// 添加 chunk
-func addChunk(chunk []*evtx.Chunk) {
-	chunksLock.Lock()
-	defer chunksLock.Unlock()
-	for _, c := range chunk {
-		chunks = append(chunks, c)
-	}
-}
-
-// 取出 chunk
-func takeChunk() *evtx.Chunk {
-	chunksLock.Lock()
-	defer chunksLock.Unlock()
-
-	if len(chunks) == 0 {
-		return nil
-	}
-	chunk := chunks[0]
-	chunks = chunks[1:]
-	return chunk
 }
 
 // 添加记录
@@ -85,14 +53,10 @@ func TakeRecord() *evtx.EventRecord {
 	return record
 }
 
-// func fileWork(fc chan string, wg *sync.WaitGroup) {
-func fileWork(wg *sync.WaitGroup) {
-
-}
-
-// 读取文件拿chunk
-func chunkWork(wg *sync.WaitGroup) {
+// 读取线程
+func readWork(wg *sync.WaitGroup) {
 	for {
+		// 读文件
 		f := takeFile()
 		if f == "" {
 			wg.Done()
@@ -103,46 +67,45 @@ func chunkWork(wg *sync.WaitGroup) {
 			addError("[ERROR] 打开" + f + "文件失败:" + err.Error())
 			continue
 		}
-		// 获取文件中的所有块（Chunk）
+		// 解析文件中的块
 		chunks, err := evtx.GetChunks(file)
-		file.Close()
 		if err != nil {
 			addError("[ERROR] 获取 " + f + " 文件 Chunk 出现错误, 错误信息: " + err.Error())
 			continue
 		}
-		addChunk(chunks)
+		// 解析块中的记录
+		for i, c := range chunks {
+			if c == nil {
+				break
+			}
+			records, err := c.Parse(0)
+			if err != nil {
+				addError("[ERROR] 解析" + file.Name() + "文件的第 " + fmt.Sprint(i) + " 个 Chunk 出现错误, 错误信息: " + err.Error())
+				continue
+			}
+			addRecord(records)
+		}
+		file.Close()
 	}
 }
 
-// 读chunk拿记录
-func recordWork(wg *sync.WaitGroup) {
-	for {
-		c := takeChunk()
-		if c == nil {
-			wg.Done()
-			return
-		}
-		records, err := c.Parse(0)
-		if err != nil {
-			addError("[ERROR] 解析 Chunk 出现错误, 错误信息: " + err.Error())
-			continue
-		}
-		addRecord(records)
-	}
-
-}
-
+// 写入线程
 func writeWork(wg *sync.WaitGroup) {
 	for {
-		r := TakeRecord()
-		if r == nil {
+		record := TakeRecord()
+		if record == nil {
 			wg.Done()
 			return
 		}
-		err := output.Output.Write(r)
-		if err != nil {
-			addError("[ERROR] 写入数据出现错误, 错误信息: " + err.Error())
-			continue
-		}
+		output.Output.WriteRecord(record)
+	}
+}
+
+// 错误处理线程
+func errorWork(wg *sync.WaitGroup) {
+	for {
+		e := <-errorChan
+		fmt.Println(e)
+		output.Output.WriteError(e)
 	}
 }

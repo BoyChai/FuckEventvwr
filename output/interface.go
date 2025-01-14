@@ -3,7 +3,8 @@ package output
 import "FuckEventvwr/velocidex/evtx"
 
 type output interface {
-	Write(record *evtx.EventRecord) error
+	WriteRecord(record *evtx.EventRecord) error
+	WriteError(err string) error
 	Close() error
 }
 
