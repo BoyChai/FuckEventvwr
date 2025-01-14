@@ -1,6 +1,7 @@
 package control
 
 import (
+	"FuckEventvwr/output"
 	"FuckEventvwr/velocidex/evtx"
 	"fmt"
 	"os"
@@ -96,7 +97,10 @@ func writeWork(wg *sync.WaitGroup) {
 			wg.Done()
 			return
 		}
-		// output.Output.WriteRecord(record)
-		fmt.Println(record.Event)
+		err := output.Output.WriteRecord(record)
+		if err != nil {
+			fmt.Println("[ERROR] 写入记录失败, 错误信息: ", err.Error())
+		}
+
 	}
 }

@@ -9,3 +9,7 @@ type output interface {
 }
 
 var Output output
+
+func InitOutput() {
+	Output = NewExcel()
+}

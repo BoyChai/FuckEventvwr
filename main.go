@@ -3,6 +3,7 @@ package main
 import (
 	"FuckEventvwr/config"
 	"FuckEventvwr/control"
+	"FuckEventvwr/output"
 	"flag"
 	"fmt"
 )
@@ -29,6 +30,8 @@ func main() {
 	}
 	Cfg.Output = *o
 	Cfg.Cover = *c
+
+	output.InitOutput()
 
 	control.Run()
 }
