@@ -8,8 +8,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
-	"time"
 )
+
+// 活动线程池锁
+var threadPoolLock sync.Mutex
+
+// 活动线程池数量
+var threadPool int = 0
 
 func Run() {
 	Cfg := config.Cfg
@@ -28,13 +33,13 @@ func Run() {
 	}
 
 	var wg sync.WaitGroup
-	threads := runtime.NumCPU() / 2
+	threads := runtime.NumCPU()
 	for i := 0; i < threads; i++ {
 		wg.Add(1)
 		go readWork(&wg)
+		threadPool++
 	}
-	time.Sleep(2 * time.Second)
-	for i := 0; i < threads; i++ {
+	for i := 0; i < threads*2; i++ {
 		wg.Add(1)
 		go writeWork(&wg)
 	}

@@ -15,8 +15,8 @@ var recordsLock sync.Mutex
 // 所有文件
 var files []string
 
-// 所有事件
-var records []*evtx.EventRecord
+// 事件通道
+var recordChan chan *evtx.EventRecord = make(chan *evtx.EventRecord, 10000)
 
 // 取出文件
 func takeFile() string {
@@ -31,35 +31,16 @@ func takeFile() string {
 	return file
 }
 
-// 添加记录
-func addRecord(record []*evtx.EventRecord) {
-	recordsLock.Lock()
-	defer recordsLock.Unlock()
-	for _, r := range record {
-		records = append(records, r)
-	}
-}
-
-// 取出记录
-func TakeRecord() *evtx.EventRecord {
-	recordsLock.Lock()
-	defer recordsLock.Unlock()
-
-	if len(records) == 0 {
-		return nil
-	}
-	record := records[0]
-	records = records[1:]
-	return record
-}
-
 // 读取线程
 func readWork(wg *sync.WaitGroup) {
+	defer wg.Done()
 	for {
 		// 读文件
 		f := takeFile()
 		if f == "" {
-			wg.Done()
+			threadPoolLock.Lock()
+			threadPool--
+			threadPoolLock.Unlock()
 			return
 		}
 		file, err := os.Open(f)
@@ -83,7 +64,10 @@ func readWork(wg *sync.WaitGroup) {
 				addError("[ERROR] 解析" + file.Name() + "文件的第 " + fmt.Sprint(i) + " 个 Chunk 出现错误, 错误信息: " + err.Error())
 				continue
 			}
-			addRecord(records)
+			for _, record := range records {
+
+				recordChan <- record
+			}
 		}
 		file.Close()
 	}
@@ -91,16 +75,20 @@ func readWork(wg *sync.WaitGroup) {
 
 // 写入线程
 func writeWork(wg *sync.WaitGroup) {
+	defer wg.Done()
 	for {
-		record := TakeRecord()
-		if record == nil {
-			wg.Done()
-			return
+		select {
+		// 有数据
+		case record := <-recordChan:
+			err := output.Output.WriteRecord(record)
+			if err != nil {
+				fmt.Println("[ERROR] 写入记录失败, 错误信息: ", err.Error())
+			}
+		// 没数据
+		default:
+			if threadPool == 0 {
+				return
+			}
 		}
-		err := output.Output.WriteRecord(record)
-		if err != nil {
-			fmt.Println("[ERROR] 写入记录失败, 错误信息: ", err.Error())
-		}
-
 	}
 }
