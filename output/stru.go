@@ -61,13 +61,13 @@ type System struct {
 // 	Value interface{} `json:"Value"` // 数据项的值，可以是任何类型
 // }
 
-// EventData 包含事件数据，通常与事件的具体信息相关
-type EventData struct {
-	Data interface{} `json:"Data"` // 允许多个 Data 项
-}
+// // EventData 包含事件数据，通常与事件的具体信息相关
+// type EventData struct {
+// 	Data interface{} `json:"Data"` // 允许多个 Data 项
+// }
 
 // Event 表示整个事件的结构，包含系统信息和事件数据
 type Event struct {
-	System    System    `json:"System"`    // 事件的系统信息
-	EventData EventData `json:"EventData"` // 事件的具体数据
+	System    System      `json:"System"`    // 事件的系统信息
+	EventData interface{} `json:"EventData"` // 事件的具体数据
 }

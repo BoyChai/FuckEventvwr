@@ -10,7 +10,6 @@ import (
 
 // 锁
 var filesLock sync.Mutex
-var recordsLock sync.Mutex
 
 // 所有文件
 var files []string
@@ -82,7 +81,7 @@ func writeWork(wg *sync.WaitGroup) {
 		case record := <-recordChan:
 			err := output.Output.WriteRecord(record)
 			if err != nil {
-				fmt.Println("[ERROR] 写入记录失败, 错误信息: ", err.Error())
+				addError("[ERROR] 写入记录失败, 错误信息: " + err.Error())
 			}
 		// 没数据
 		default:

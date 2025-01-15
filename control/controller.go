@@ -45,5 +45,4 @@ func Run() {
 	}
 	wg.Wait()
 	output.Output.Close()
-	fmt.Println("[SUCCESS] 完成任务老板")
 }

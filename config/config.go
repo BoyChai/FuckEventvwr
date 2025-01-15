@@ -5,8 +5,8 @@ type config struct {
 	Path string
 	// 输出
 	Output string
-	// 是否覆盖
-	Cover bool
+	// 输出模式
+	Mode int
 }
 
 var Cfg = &config{}
