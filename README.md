@@ -1,4 +1,5 @@
 # FuckEventvwr - Evtx日志解析工具
+![FuckEventvwr](https://socialify.git.ci/BoyChai/FuckEventvwr/image?font=Inter&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit+Board&pulls=1&stargazers=1&theme=Light)
 ## 简介
 Evtx日志解析工具，用于解析Windows事件日志文件（.evtx），提取其中的事件信息，并生成xlsx报告，后续会支持数据导出到Elasticsearch中。
 
@@ -29,5 +30,9 @@ Usage of FuckEventvwr.exe:
 ## 其他
 - 由于xslx的限制，它是有最大限制的，似乎最多就100w行，不建议多个主机日志都丢到一个目录中分析，而是分开目录，分开解析、分析。  
 - 本人机器是12500H，50w条数据，大概需要40秒左右，机器更好应该会更快。
+
 ## 相关截图  
 ![xlsx](static/xlsx.png)
+
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/BoyChai/FuckEventvwr.svg?variant=adaptive)](https://starchart.cc/BoyChai/FuckEventvwr)
