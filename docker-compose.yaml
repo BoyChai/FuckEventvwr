@@ -1,0 +1,40 @@
+version: "3"
+services:
+  elasticsearch:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:7.17.27
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.elastic.co/elasticsearch/elasticsearch:7.17.27
+    container_name: es_container
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xmx512m -Xms512m
+    ports:
+      - "9200:9200"
+    networks:
+      - elastic_network
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      retries: 3
+
+  kibana:
+    # image: docker.elastic.co/kibana/kibana:7.17.27
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.elastic.co/kibana/kibana:7.17.27
+    container_name: kibana_container
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic_network
+
+networks:
+  elastic_network:
+    driver: bridge
+
+volumes:
+  es_data:
+    driver: local
