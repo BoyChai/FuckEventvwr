@@ -1,6 +1,9 @@
 package output
 
-import "FuckEventvwr/velocidex/evtx"
+import (
+	"FuckEventvwr/config"
+	"FuckEventvwr/velocidex/evtx"
+)
 
 type output interface {
 	WriteRecord(record *evtx.EventRecord) error
@@ -11,5 +14,9 @@ type output interface {
 var Output output
 
 func InitOutput() {
-	Output = NewExcel()
+	if config.Cfg.EsURL != "" {
+		Output = NewElasticsearch()
+	} else {
+		Output = NewExcel()
+	}
 }

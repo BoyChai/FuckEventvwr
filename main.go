@@ -12,7 +12,7 @@ import (
 func main() {
 	startTime := time.Now()
 
-	outputFileName := fmt.Sprintf("%sevent-%s.xlsx", "./", time.Now().Format("2006-01-02-15-04-05"))
+	outputFileName := fmt.Sprintf("event-%s.xlsx", time.Now().Format("2006-01-02-15-04-05"))
 
 	// 解析命令行参数
 	t := flag.String("t", "p", "指定类型,默认为p,即指定路径模式,s为系统日志")
