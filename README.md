@@ -10,6 +10,8 @@ Evtx日志解析工具，用于解析Windows事件日志文件（.evtx），提�
 ## 使用
 ```bash
 Usage of FuckEventvwr.exe:
+  -eu string
+        ESURL,设置ESURL则只往ES中打入数据,默认为空
   -m int
         输出模式,默认0,0为只打印处理好的数据,1则处理好的数据+原始数据都放到一个xlsx中,2则只输出原始数据
   -o string
@@ -25,7 +27,8 @@ Usage of FuckEventvwr.exe:
 - [x] 解析evtx日志,
 - [x] 关键数据导出xlsx
 - [x] 导出数据json原始数据到xlsx
-- [ ] 导出到ES(Elasticsearch)中
+- [x] 导出到ES(Elasticsearch)中
+- [ ] 针对命令执行做数据筛选
 
 ## 其他
 - 由于xslx的限制，它是有最大限制的，似乎最多就100w行，不建议多个主机日志都丢到一个目录中分析，而是分开目录，分开解析、分析。  
@@ -33,6 +36,6 @@ Usage of FuckEventvwr.exe:
 
 ## 相关截图  
 ![xlsx](static/xlsx.png)
-
+![Elasticsearchs](static/es.png)
 ## Stargazers over time
 [![Stargazers over time](https://starchart.cc/BoyChai/FuckEventvwr.svg?variant=adaptive)](https://starchart.cc/BoyChai/FuckEventvwr)
