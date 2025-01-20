@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/olivere/elastic/v7"
 )
@@ -93,6 +94,11 @@ type Elasticsearch struct {
 	Index  *elastic.IndexService
 }
 
+// 缓冲
+var recordBuffer []ESDataStru
+var bufferLimit = 1000
+var bufferLock sync.Mutex
+
 // 创建一个新的Elasticsearch实例
 func NewElasticsearch() *Elasticsearch {
 	client, err := elastic.NewClient(
@@ -113,7 +119,6 @@ func NewElasticsearch() *Elasticsearch {
 }
 func (e *Elasticsearch) WriteRecord(record *evtx.EventRecord) error {
 	var struData EventStru
-
 	strData := fmt.Sprint(record.Event)
 	err := json.Unmarshal([]byte(strData), &struData)
 	if err != nil {
@@ -138,9 +143,16 @@ func (e *Elasticsearch) WriteRecord(record *evtx.EventRecord) error {
 		Security:   fmt.Sprint(struData.Event.System.Security),
 		EventData:  fmt.Sprint(struData.Event.EventData),
 	}
-	_, err = e.Index.BodyJson(data).Do(context.Background())
-	if err != nil {
-		fmt.Println("[Error] 写入Elasticsearch失败,请检查:", err.Error())
+
+	// 将数据加入缓存
+	recordBuffer = append(recordBuffer, data)
+
+	bufferLock.Lock()
+	// 当缓存达到一定大小时，执行批量写入
+	if len(recordBuffer) >= bufferLimit {
+		go e.do()
+	} else {
+		bufferLock.Unlock()
 	}
 	return nil
 }
@@ -149,6 +161,28 @@ func (e *Elasticsearch) WriteError(err string) error {
 	return nil
 }
 func (e *Elasticsearch) Close() error {
+	bufferLock.Lock()
+	e.do()
 	e.Client.Stop()
 	return nil
+}
+
+func (e *Elasticsearch) do() {
+	bulkRequest := e.Client.Bulk()
+	for _, record := range recordBuffer {
+		request := elastic.NewBulkIndexRequest().
+			Index(config.Cfg.Output).
+			Doc(record).
+			OpType("index")
+		bulkRequest = bulkRequest.Add(request)
+	}
+
+	_, err := bulkRequest.Do(context.Background())
+	if err != nil {
+		fmt.Println("[Error] 批量写入Elasticsearch失败, 请检查:", err.Error())
+	}
+
+	// 清空缓存
+	recordBuffer = nil
+	bufferLock.Unlock()
 }
