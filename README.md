@@ -28,6 +28,7 @@ Usage of FuckEventvwr.exe:
 - [x] 关键数据导出xlsx
 - [x] 导出数据json原始数据到xlsx
 - [x] 导出到ES(Elasticsearch)中
+- [ ] 针对ES导出做优化
 - [ ] 针对命令执行做数据筛选
 
 ## 其他
