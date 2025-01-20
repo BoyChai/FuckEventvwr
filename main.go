@@ -19,6 +19,7 @@ func main() {
 	p := flag.String("p", "./", "指定路径,默认为当前路径,匹配方式是这个路径下的全部evtx文件")
 	o := flag.String("o", outputFileName, "输出位置,默认为当前目录的 event-年-月-日-时-分-秒.xlsx")
 	m := flag.Int("m", 0, "输出模式,默认0,0为只打印处理好的数据,1则处理好的数据+原始数据都放到一个xlsx中,2则只输出原始数据")
+	eu := flag.String("eu", "", "ESURL,设置ESURL则只往ES中打入数据,默认为空")
 
 	flag.Parse()
 
@@ -35,6 +36,7 @@ func main() {
 
 	Cfg.Output = *o
 	Cfg.Mode = *m
+	Cfg.EsURL = *eu
 
 	output.InitOutput()
 	control.Run()
