@@ -109,14 +109,25 @@ func NewElasticsearch() *Elasticsearch {
 		fmt.Println("[Error] 连接Elasticsearch失败,请检查:", err.Error())
 		os.Exit(1)
 	}
-	_, err = client.CreateIndex(config.Cfg.Output).BodyString(ESDataStru{}.Mapping()).Do(context.Background())
+
+	exists, err := client.IndexExists(config.Cfg.Output).Do(context.Background())
 	if err != nil {
-		fmt.Println("[Error] 创建Elasticsearch索引失败,请检查:", err.Error())
+		fmt.Println("[Error] 检查索引是否存在失败,请检查:", err.Error())
 		os.Exit(1)
 	}
 
+	if !exists {
+		_, err := client.CreateIndex(config.Cfg.Output).BodyString(ESDataStru{}.Mapping()).Do(context.Background())
+		if err != nil {
+			fmt.Println("[Error] 创建Elasticsearch索引失败,请检查:", err.Error())
+			os.Exit(1)
+		}
+	}
+	fmt.Println("[INFO] Elasticsearch索引已存在:", config.Cfg.Output)
+
 	return &Elasticsearch{Client: client, Index: client.Index().Index(config.Cfg.Output)}
 }
+
 func (e *Elasticsearch) WriteRecord(record *evtx.EventRecord) error {
 	var struData EventStru
 	strData := fmt.Sprint(record.Event)
