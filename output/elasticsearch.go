@@ -145,9 +145,9 @@ func (e *Elasticsearch) WriteRecord(record *evtx.EventRecord) error {
 	}
 
 	// 将数据加入缓存
+	bufferLock.Lock()
 	recordBuffer = append(recordBuffer, data)
 
-	bufferLock.Lock()
 	// 当缓存达到一定大小时，执行批量写入
 	if len(recordBuffer) >= bufferLimit {
 		go e.do()
