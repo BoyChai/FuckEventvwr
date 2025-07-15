@@ -3,7 +3,6 @@ package output
 import (
 	"FuckEventvwr/config"
 	"FuckEventvwr/velocidex/evtx"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -123,12 +122,8 @@ func (e *Excel) WriteRecord(record *evtx.EventRecord) error {
 		}
 	}
 
-	var struData EventStru
-
-	strData := fmt.Sprint(record.Event)
-	err := json.Unmarshal([]byte(strData), &struData)
+	struData, err := getStruData(record.Event)
 	if err != nil {
-		fmt.Println(strData)
 		return errors.New("json解析错误: " + err.Error())
 	}
 

@@ -4,7 +4,6 @@ import (
 	"FuckEventvwr/config"
 	"FuckEventvwr/velocidex/evtx"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -129,11 +128,9 @@ func NewElasticsearch() *Elasticsearch {
 }
 
 func (e *Elasticsearch) WriteRecord(record *evtx.EventRecord) error {
-	var struData EventStru
-	strData := fmt.Sprint(record.Event)
-	err := json.Unmarshal([]byte(strData), &struData)
+
+	struData, err := getStruData(record.Event)
 	if err != nil {
-		fmt.Println(strData)
 		return errors.New("json解析错误: " + err.Error())
 	}
 
