@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/blevesearch/bleve"
@@ -22,11 +23,11 @@ type indexEventStr struct {
 	// 日志来源
 	Source string `json:"Source"`
 	// 事件类型ID
-	EventTypeID int `json:"EventTypeID"`
+	EventTypeID string `json:"EventTypeID"`
 	// 事件具体数据
 	Data interface{} `json:"Data"`
 	// 进程ID
-	ProcessID int `json:"ProcessID"`
+	ProcessID string `json:"ProcessID"`
 }
 
 type Bleve struct {
@@ -36,13 +37,33 @@ type Bleve struct {
 	mu    sync.Mutex
 }
 
-func NewBleve() *Bleve {
+func NewBleve(path string) *Bleve {
+
+	cacheDir := ".eventvwr"
+	// 检查缓存目录是否存在,不存在创建
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(cacheDir, 0755); err != nil {
+			fmt.Println("创建缓存目录 %s 失败: %w", cacheDir, err)
+			os.Exit(1)
+		}
+	} else if err != nil {
+		fmt.Println("检查缓存目录 %s 失败: %w", cacheDir, err)
+		os.Exit(1)
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		fmt.Println("获取绝对路径失败: %w", err)
+		os.Exit(1)
+	}
+	absPath = filepath.Clean(absPath)
+	hash := md5.Sum([]byte(absPath))
 	var outBleve Bleve
 
-	index, err := bleve.Open("logs.cache")
+	index, err := bleve.Open(".eventvwr/" + fmt.Sprintf("%x", hash))
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		mapping := bleve.NewIndexMapping()
-		index, err = bleve.New("logs.cache", mapping)
+		index, err = bleve.New(".eventvwr/"+fmt.Sprintf("%x", hash), mapping)
 		if err != nil {
 			fmt.Println("[Error] Bleve 新建索引失败:", err.Error())
 			os.Exit(1)
@@ -76,9 +97,9 @@ func (b *Bleve) WriteRecord(record *evtx.EventRecord) error {
 	indexData.EventID = fmt.Sprint(struData.Event.System.EventRecordID)
 	indexData.Host = struData.Event.System.Computer
 	indexData.Source = struData.Event.System.Channel
-	indexData.EventTypeID = struData.Event.System.EventID.Value
+	indexData.EventTypeID = fmt.Sprint(struData.Event.System.EventID.Value)
 	indexData.Data = struData.Event.EventData
-	indexData.ProcessID = struData.Event.System.Execution.ProcessID
+	indexData.ProcessID = fmt.Sprint(struData.Event.System.Execution.ProcessID)
 
 	b.batch.Index(fmt.Sprint(indexData.EventID), indexData)
 	b.count++

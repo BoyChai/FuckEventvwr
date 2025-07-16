@@ -1,6 +1,7 @@
 module FuckEventvwr
 
-go 1.22.5
+// go 1.22.5
+go 1.20
 
 require (
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
