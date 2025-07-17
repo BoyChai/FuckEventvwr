@@ -1,11 +1,7 @@
 # FuckEventvwr - Evtx日志解析工具
 ![FuckEventvwr](https://socialify.git.ci/BoyChai/FuckEventvwr/image?font=Inter&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit+Board&pulls=1&stargazers=1&theme=Light)
 ## 简介
-Evtx日志解析工具，用于解析Windows事件日志文件（.evtx），提取其中的事件信息，并生成xlsx报告，后续会支持数据导出到Elasticsearch中。
-
-## 下载  
-[Releases](https://github.com/BoyChai/FuckEventvwr/releases)  
-[最新构建下载](https://jenkins.workstation.boychai.xyz/job/FuckEventvwr-Pipline/)
+Evtx日志解析工具，用于解析Windows事件日志文件（.evtx），提取其中的事件信息，并生成xlsx报告，后续会支持数据导出到Elasticsearch中。下载地址[Releases](https://github.com/BoyChai/FuckEventvwr/releases)。
 
 ## 使用
 ```bash
@@ -28,16 +24,21 @@ Usage of FuckEventvwr.exe:
 - [x] 关键数据导出xlsx
 - [x] 导出数据json原始数据到xlsx
 - [x] 导出到ES(Elasticsearch)中
+- [ ] 本地缓存筛选支持
 
 ## 计划
 - ~~针对ES导出做优化~~  
-- 针对本地做数据缓存
-- 针对powershell执行做数据筛选
+- ~~针对本地做数据缓存~~
+- 导出方式全部模块化
+- 模块动态注册
+- 模块参数动态注册
+
+<!-- - 针对powershell执行做数据筛选
 - 针对用户创建做数据筛选
 - 针对服务创建做数据筛选
 - 针对用户登录做筛选
 - 针对用户授权筛选
-- 支持多种导出方式
+- 支持多种导出方式 -->
 
 
 ## 其他
