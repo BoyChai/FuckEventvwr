@@ -80,8 +80,9 @@ type EventRecordHeader struct {
 }
 
 type EventRecord struct {
-	Header EventRecordHeader
-	Event  interface{}
+	FileName string
+	Header   EventRecordHeader
+	Event    interface{}
 }
 
 func (self *EventRecord) Parse(ctx *ParseContext) {

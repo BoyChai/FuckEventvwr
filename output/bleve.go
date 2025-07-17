@@ -3,7 +3,6 @@ package output
 import (
 	"FuckEventvwr/velocidex/evtx"
 	"crypto/md5"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -12,23 +11,6 @@ import (
 
 	"github.com/blevesearch/bleve"
 )
-
-type indexEventStr struct {
-	// 索引Key
-	Key string `json:"Key"`
-	// 事件记录ID
-	EventID string `json:"EventID"`
-	// 主机名字
-	Host string `json:"Host"`
-	// 日志来源
-	Source string `json:"Source"`
-	// 事件类型ID
-	EventTypeID string `json:"EventTypeID"`
-	// 事件具体数据
-	Data interface{} `json:"Data"`
-	// 进程ID
-	ProcessID string `json:"ProcessID"`
-}
 
 type Bleve struct {
 	index bleve.Index
@@ -43,11 +25,11 @@ func NewBleve(path string) *Bleve {
 	// 检查缓存目录是否存在,不存在创建
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(cacheDir, 0755); err != nil {
-			fmt.Println("创建缓存目录 %s 失败: %w", cacheDir, err)
+			fmt.Printf("创建缓存目录 %s 失败: %v\n", cacheDir, err)
 			os.Exit(1)
 		}
 	} else if err != nil {
-		fmt.Println("检查缓存目录 %s 失败: %w", cacheDir, err)
+		fmt.Printf("检查缓存目录 %s 失败:%v\n", cacheDir, err)
 		os.Exit(1)
 	}
 
@@ -84,24 +66,10 @@ func (b *Bleve) WriteRecord(record *evtx.EventRecord) error {
 	if err != nil {
 		return errors.New("json解析错误: " + err.Error())
 	}
+	kvData := getKvEventData(struData, record.FileName)
 	b.mu.Lock()
 	defer b.mu.Unlock()
-
-	var indexData indexEventStr
-	keyStr := fmt.Sprintf("%s_%s_%d",
-		struData.Event.System.Computer,
-		struData.Event.System.Channel,
-		struData.Event.System.EventRecordID)
-	md5Bytes := md5.Sum([]byte(keyStr))
-	indexData.Key = hex.EncodeToString(md5Bytes[:])
-	indexData.EventID = fmt.Sprint(struData.Event.System.EventRecordID)
-	indexData.Host = struData.Event.System.Computer
-	indexData.Source = struData.Event.System.Channel
-	indexData.EventTypeID = fmt.Sprint(struData.Event.System.EventID.Value)
-	indexData.Data = struData.Event.EventData
-	indexData.ProcessID = fmt.Sprint(struData.Event.System.Execution.ProcessID)
-
-	b.batch.Index(fmt.Sprint(indexData.EventID), indexData)
+	b.batch.Index(fmt.Sprint(kvData.EventID), kvData)
 	b.count++
 	// 1000条批量提交
 	if b.count >= 1000 {
