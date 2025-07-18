@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	// _ "FuckEventvwr/output"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type ModuleParam struct {
@@ -28,12 +30,15 @@ func RegisterModule(name string, config ModuleConfig) {
 
 // 初始化模块
 func RunModule(args []string) {
-	if len(args) < 2 {
-		fmt.Println("未指定模块，默认采用buntdb分析")
-		args[1] = "buntdb"
-	}
-	mode := args[1]
+	var mode string
+	defaultModule := "buntdb"
 
+	if len(args) < 2 || strings.HasPrefix(args[1], "-") || !isValidModule(args[1]) {
+		fmt.Println("未指定模块或模块无效，默认采用", defaultModule)
+		mode = defaultModule
+	} else {
+		mode = args[1]
+	}
 	module, exists := moduleRegistry[mode]
 	if !exists {
 		fmt.Println("未知模块:", mode)
@@ -55,7 +60,11 @@ func RunModule(args []string) {
 		}
 	}
 
-	fs.Parse(args[2:])
+	if mode == defaultModule && (len(args) < 2 || strings.HasPrefix(args[1], "-")) {
+		fs.Parse(args[1:])
+	} else {
+		fs.Parse(args[2:])
+	}
 
 	module.Apply(flags)
 }
@@ -67,4 +76,10 @@ func getAvailableModules() string {
 		modules = append(modules, name)
 	}
 	return fmt.Sprint(modules)
+}
+
+// 模块校验
+func isValidModule(name string) bool {
+	_, exists := moduleRegistry[name]
+	return exists
 }

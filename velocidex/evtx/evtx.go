@@ -1059,3 +1059,21 @@ func readStructFromFile(fd io.ReadSeeker, offset int64, obj interface{}) error {
 func filetimeToUnixtime(ft uint64) float64 {
 	return (float64(ft) - 11644473600000*10000) / 10000000
 }
+
+// 遍历形式统计数量
+func CountLogs(fd io.ReadSeeker) (int, error) {
+	chunks, err := GetChunks(fd)
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to get chunks")
+	}
+
+	totalLogs := 0
+	for _, chunk := range chunks {
+		logCount := int(chunk.Header.LastEventRecNumber - chunk.Header.FirstEventRecNumber + 1)
+		if logCount > 0 {
+			totalLogs += logCount
+		}
+	}
+
+	return totalLogs, nil
+}

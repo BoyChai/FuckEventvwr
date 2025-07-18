@@ -3,6 +3,7 @@ package control
 import (
 	"FuckEventvwr/config"
 	"FuckEventvwr/output"
+	"FuckEventvwr/velocidex/evtx"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,6 +32,21 @@ func Run() {
 			files = append(files, fmt.Sprint(filepath.Join(Cfg.Path, f.Name())))
 		}
 	}
+	var count int
+	for _, file := range files {
+		f, err := os.Open(file)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		c, err := evtx.CountLogs(f)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		count += c
+	}
+	fmt.Println("日志总量：", count)
 
 	var wg sync.WaitGroup
 	threads := runtime.NumCPU()
@@ -44,5 +60,11 @@ func Run() {
 		go writeWork(&wg)
 	}
 	wg.Wait()
-	output.Output.Close()
+	outCount, err := output.Module.Close()
+
+	if err != nil {
+		fmt.Println("日志数量统计失败", err)
+		os.Exit(1)
+	}
+	fmt.Println("模块收集日志数据量：", outCount)
 }

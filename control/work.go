@@ -64,7 +64,7 @@ func readWork(wg *sync.WaitGroup) {
 				continue
 			}
 			for _, record := range records {
-
+				record.FileName = file.Name()
 				recordChan <- record
 			}
 		}
@@ -79,7 +79,7 @@ func writeWork(wg *sync.WaitGroup) {
 		select {
 		// 有数据
 		case record := <-recordChan:
-			err := output.Output.WriteRecord(record)
+			err := output.Module.WriteRecord(record)
 			if err != nil {
 				addError("[ERROR] 写入记录失败, 错误信息: " + err.Error())
 			}
