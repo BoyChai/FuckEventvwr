@@ -91,3 +91,29 @@ func writeWork(wg *sync.WaitGroup) {
 		}
 	}
 }
+
+// 数据校验
+func checkData(files []string) (bool, int, error) {
+	outCount, err := output.Module.Count()
+	if err != nil {
+		return false, 0, err
+	}
+	var count int
+	for _, file := range files {
+		f, err := os.Open(file)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		c, err := evtx.CountLogs(f)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		count += c
+	}
+	if outCount != count {
+		return false, outCount, nil
+	}
+	return true, outCount, nil
+}

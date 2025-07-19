@@ -29,7 +29,7 @@ func RegisterModule(name string, config ModuleConfig) {
 }
 
 // 初始化模块
-func RunModule(args []string) {
+func InitModule(args []string) []string {
 	var mode string
 	defaultModule := "buntdb"
 
@@ -60,13 +60,16 @@ func RunModule(args []string) {
 		}
 	}
 
+	var extraArgs []string
 	if mode == defaultModule && (len(args) < 2 || strings.HasPrefix(args[1], "-")) {
 		fs.Parse(args[1:])
 	} else {
 		fs.Parse(args[2:])
 	}
+	extraArgs = fs.Args()
 
 	module.Apply(flags)
+	return extraArgs
 }
 
 // 模块信息

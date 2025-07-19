@@ -66,10 +66,11 @@ func getKvEventData(struData EventStru, file string) KvEventData {
 	md5Bytes := md5.Sum([]byte(keyStr))
 	KvData.Key = hex.EncodeToString(md5Bytes[:])
 	KvData.FileName = file
-	sec := int64(struData.Event.System.TimeCreated.SystemTime)
-	nsec := int64((struData.Event.System.TimeCreated.SystemTime - float64(sec)) * 1e9)
-	tm := time.Unix(sec, nsec)
-	KvData.CreateTime = tm.Format("2006-01-02 15:04:05")
+	// sec := int64(struData.Event.System.TimeCreated.SystemTime)
+	// nsec := int64((struData.Event.System.TimeCreated.SystemTime - float64(sec)) * 1e9)
+	// tm := time.Unix(sec, nsec)
+	// KvData.CreateTime = tm.Format("2006-01-02 15:04:05")
+	KvData.CreateTime = fmt.Sprint(struData.Event.System.TimeCreated.SystemTime)
 	KvData.EventID = fmt.Sprint(struData.Event.System.EventRecordID)
 	KvData.Host = struData.Event.System.Computer
 	KvData.Source = struData.Event.System.Channel

@@ -3,7 +3,6 @@ package control
 import (
 	"FuckEventvwr/config"
 	"FuckEventvwr/output"
-	"FuckEventvwr/velocidex/evtx"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ var threadPoolLock sync.Mutex
 // 活动线程池数量
 var threadPool int = 0
 
-func Run() {
+func Run(args []string) {
 	Cfg := config.Cfg
 	dfs, err := os.ReadDir(Cfg.Path)
 
@@ -32,22 +31,22 @@ func Run() {
 			files = append(files, fmt.Sprint(filepath.Join(Cfg.Path, f.Name())))
 		}
 	}
-	var count int
-	for _, file := range files {
-		f, err := os.Open(file)
-		if err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(1)
-		}
-		c, err := evtx.CountLogs(f)
-		if err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(1)
-		}
-		count += c
+	isOK, count, err := checkData(files)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
 	}
-	fmt.Println("日志总量：", count)
 
+	if isOK {
+		fmt.Println("数据总量为：", count)
+		return
+	}
+
+	fmt.Println("数据未进行缓存，开始缓存数据")
+	buildCache()
+}
+
+func buildCache() {
 	var wg sync.WaitGroup
 	threads := runtime.NumCPU()
 	for i := 0; i < threads; i++ {

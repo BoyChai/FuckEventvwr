@@ -113,3 +113,19 @@ func (b *Buntdb) Close() (int, error) {
 	}
 	return keyCount, b.db.Close()
 }
+
+func (b *Buntdb) Count() (int, error) {
+	var keyCount int
+
+	err := b.db.View(func(tx *buntdb.Tx) error {
+		return tx.AscendKeys("*", func(key, value string) bool {
+			keyCount++
+			return true
+		})
+	})
+	if err != nil {
+		return 0, err
+	}
+	return keyCount, nil
+}
+
